@@ -335,12 +335,12 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
         let mybestslack_for_new_Blossom: number | null = null;
         for (const k_edge of newBlossom.mybestedges) {
             const kslack = slack(...k_edge);
-            if (mybestedge_for_new_Blossom === null || kslack < mybestslack_for_new_Blossom!) {
-                mybestedge_for_new_Blossom = k_edge;
+            if (mybestedge_for_newBlossom === null || kslack < mybestslack_for_new_Blossom!) {
+                mybestedge_for_newBlossom = k_edge;
                 mybestslack_for_new_Blossom = kslack;
             }
         }
-        bestedge.set(newBlossom, mybestedge_for_new_Blossom);
+        bestedge.set(newBlossom, mybestedge_for_newBlossom);
     }
     
     function expandBlossom(b_to_expand: Blossom, endstage: boolean): void {
