@@ -567,13 +567,17 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
     }
 
     function augmentMatching(v_start_node: string, w_start_node: string): void {
+        console.log(`Augment matching ${v_start_node} ${w_start_node}`)
         for (const [s_arg, j_arg] of [[v_start_node, w_start_node], [w_start_node, v_start_node]]) {
+            // console.log(`${inblossom.keys()}`)
             let s_node = s_arg; // string
             let j_node = j_arg; // string
+            console.log(`s='${s_node}' j='${j_node}'`);
 
             while (true) {
                 const bs_comp = inblossom.get(s_node)!;
-                if (label.get(bs_comp)! !== 1) throw new Error(`Assertion failed: label of ${bs_comp} is not 1`);
+                console.log(`s='${s_node}' bs='${bs_comp}'`)
+                if (label.get(bs_comp)! !== 1) throw new Error(`Assertion failed: label of ${bs_comp} is not 1: ${label.get(bs_comp)}`);
 
                 const lblEdge_bs = labeledge.get(bs_comp);
                 if (lblEdge_bs === null || lblEdge_bs === undefined) {
@@ -602,8 +606,8 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 // Python: s,j = labeledge[bt]. s is parent, j is child. New (s_node, j_node) for mate[j]=s.
                 // My labeledge: [parent, child]. So lblEdge_bt[0] is parent, lblEdge_bt[1] is child.
                 // New s_node (child) = lblEdge_bt[1]. New j_node (parent) = lblEdge_bt[0].
-                s_node = lblEdge_bt[1]; // Child node in bt_comp
-                j_node = lblEdge_bt[0]; // Parent node in tree
+                s_node = lblEdge_bt[0]; // Child node in bt_comp
+                j_node = lblEdge_bt[1]; // Parent node in tree
 
                 if (blossombase.get(bt_comp)! !== t_node_matched_in_bs) {
                     // This implies t_node_matched_in_bs should be the base of bt_comp.
@@ -613,9 +617,9 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
 
                 if (bt_comp instanceof Blossom) {
                     // Exposed node in bt_comp is s_node (the child node on the path)
-                    augmentBlossom(bt_comp, s_node);
+                    augmentBlossom(bt_comp, j_node);
                 }
-                mate[s_node] = j_node;
+                mate[j_node] = s_node;
             }
         }
     }
