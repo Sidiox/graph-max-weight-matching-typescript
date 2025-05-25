@@ -1,4 +1,5 @@
 from itertools import repeat
+import json
 from numbers import Number
 from typing import Any
 
@@ -104,20 +105,17 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
         dualvar_v = dualvar[v]
         dualvar_w = dualvar[w]
         weight = 2 * G[v][w]
-        print(f"{dualvar_v=} {dualvar_w=} {weight=}")
+        # print(f"{dualvar_v=} {dualvar_w=} {weight=}")
         return dualvar_v + dualvar_w - weight
 
     def assignLabel(w: NodeType, t: int, v: NullableNodeType):
         b = inblossom[w]
         assert label.get(w) is None and label.get(b) is None
-        label[w] = t
-        label[b] = t
+        label[w] = label[b] = t
         if v is not None:
-            labeledge[w] = (v, w)
-            labeledge[b] = (v, w)
+            labeledge[w] = labeledge[b] = (v, w)
         else:
-            labeledge[w] = None
-            labeledge[b] = None
+            labeledge[w] = labeledge[b] = None
         bestedge[w] = bestedge[b] = None
         if t == 1:
             if isinstance(b, Blossom):
@@ -165,10 +163,8 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
         blossombase[b] = base
         blossomparent[b] = None
         blossomparent[bb] = b
-        b.childs = []
-        path = []
-        b.edges = [(v, w)]
-        edgs = [(v, w)]
+        b.childs = path = []
+        b.edges = edgs = [(v, w)]
         while bv != bb:
             blossomparent[bv] = b
             path.append(bv)
@@ -351,9 +347,12 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
                 stack.pop()
 
     def augmentMatching(v, w):
+        print(f"Augment matching {v} {w}")
         for s, j in ((v, w), (w, v)):
+            print(f"{s=} {j=}")
             while 1:
                 bs = inblossom[s]
+                print(f"{s=} {bs=}")
                 assert label[bs] == 1
                 assert (labeledge[bs] is None and blossombase[bs] not in mate) or (
                     labeledge[bs][0] == mate[blossombase[bs]]
@@ -409,7 +408,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
                     assert mate[i] == j and mate[j] == i
 
     while 1:
-        print("outer")
+        print("Outer loop iteration")
         label.clear()
         labeledge.clear()
         bestedge.clear()
@@ -422,12 +421,11 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
                 assignLabel(v, 1, None)
         augmented = 0
         while 1:
-            print(f"Inner 1 {len(queue)}")
+            print(f"Inner loop 1 (BFS), queue length: {len(queue)}")
 
             while queue and not augmented:
-                print("Inner queue")
                 v = queue.pop()
-                print(v)
+                print(f"Processing node from stack: {v}")
                 assert label[inblossom[v]] == 1
                 for w in G.neighbors(v):
                     if w == v:
@@ -438,16 +436,14 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
                         continue
                     if (v, w) not in allowedge:
                         kslack = slack(v, w)
-                        print(f"kslack {kslack}")
+                        print(f"Slack for ({v}, {w}): {kslack}")
                         if kslack <= 0:
                             allowedge[(v, w)] = allowedge[(w, v)] = True
-                    print(f"negh ${allowedge}")
                     if (v, w) in allowedge:
-                        print("c2")
+                        print(f"Edge ({v},{w}) is allowed.")
                         if label.get(bw) is None:
                             assignLabel(w, 2, v)
                         elif label.get(bw) == 1:
-                            print("Scan")
                             base = scanBlossom(v, w)
                             if base is not NoNode:
                                 addBlossom(base, v, w)
@@ -466,7 +462,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
                         if bestedge.get(w) is None or kslack < slack(*bestedge[w]):
                             bestedge[w] = (v, w)
             if augmented:
-                print("Break!")
+                print("Augmented, breaking from inner dual adjustment loop.")
                 break
             deltatype = -1
             delta: None | int | float = None
@@ -522,13 +518,15 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
                         blossomdual[b] += delta
                     elif label.get(b) == 2:
                         blossomdual[b] -= delta
+
+
+            print(f"Duals updated with delta={delta}, type={deltatype}")
             if deltatype == 1:
                 break
             elif deltatype == 2:
                 (v, w) = deltaedge
                 assert label[inblossom[v]] == 1
-                allowedge[(v, w)] = True
-                allowedge[(w, v)] = True
+                allowedge[(v, w)] = allowedge[(w, v)] = True
                 queue.append(v)
             elif deltatype == 3:
                 (v, w) = deltaedge
@@ -567,19 +565,37 @@ def matching_dict_to_set(mate: dict):
 
 
 if __name__ == "__main__":
-    g = Graph()
-    print("Graph:")
-    edges = [
-        ("A", "B", 6),
-        ("A", "C", 2),
-        ("B", "C", 1),
-        ("B", "D", 7),
-        ("C", "E", 9),
-        ("D", "E", 3),
-    ]
+    # g = Graph()
+    # print("Graph:")
+    # edges = [
+    #     ("A", "B", 6),
+    #     ("A", "C", 2),
+    #     ("B", "C", 1),
+    #     ("B", "D", 7),
+    #     ("C", "E", 9),
+    #     ("D", "E", 3),
+    # ]
 
-    g.add_weighted_edges_from(edges)
-    res = max_weight_matching(g)
-    print("Pure Python:")
-    print(res)
-    assert res == frozenset({('C', 'E'), ('B', 'D')})
+    # g.add_weighted_edges_from(edges)
+    # res = max_weight_matching(g)
+    # print("Pure Python:")
+    # print(res)
+    # assert res == frozenset({('C', 'E'), ('B', 'D')})
+
+
+    test_set = []
+    with open("results.json") as f:
+        test_set = json.load(f)
+
+    for test in test_set[3:4]:
+        g = Graph()
+        edges = test["edges"]
+        g.add_weighted_edges_from(edges)
+        res = max_weight_matching(g)
+        print("Pure Python:")
+        print(res)
+        ref = test["result"]
+        res = sorted([sorted(x) for x in res])
+        ref = sorted([sorted(x) for x in ref])
+
+        assert res == ref, f"{res} {ref} "
