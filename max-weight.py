@@ -2,6 +2,71 @@ from itertools import repeat
 import json
 import random
 
+
+class Graph:
+    def __init__(self):
+        self.adj = {}  # Adjacency list: {node: {neighbor: weight}}
+        self.node_list = []
+
+    def add_edge(self, u, v, weight=1):
+        """Adds an edge between nodes u and v with the specified weight."""
+        if u not in self.adj:
+            self.adj[u] = {}
+            self.node_list.append(u)
+        if v not in self.adj:
+            self.adj[v] = {}
+            self.node_list.append(v)
+
+        self.adj[u][v] = weight
+        self.adj[v][u] = weight  # Assuming undirected graph
+
+    def add_weighted_edges_from(self, edge_list):
+        """Adds multiple weighted edges from a list of (u, v, weight) tuples."""
+        for u, v, weight in edge_list:
+            self.add_edge(u, v, weight)
+
+    def __iter__(self):
+        """Allows iteration over the nodes in the graph."""
+        return iter(self.node_list) # list(self.adj.keys())
+
+    def edges(self, data=False):
+        """Iterates through edges, optionally including edge data (weights)."""
+        seen = set()
+        for u in self.adj:
+            for v in self.adj[u]:
+                if (u, v) not in seen and (v, u) not in seen:
+                    seen.add((u, v))
+                    if data:
+                        yield u, v, {'weight': self.adj[u][v]}
+                    else:
+                        yield u, v
+
+    def neighbors(self, node):
+        """Returns a list of neighbors for the given node."""
+        return list(self.adj[node].keys())
+
+    def __getitem__(self, node):
+        """Enables accessing neighbors and their weights using graph[node][neighbor]."""
+        return self.adj[node]
+    
+    def nodes(self):
+        """Returns an iterator over the nodes in the graph."""
+        return iter(self.node_list) # self.adj.keys()
+
+
+def matching_dict_to_set(mate):
+    """Convert matching represented as a dict to a set of tuples.
+
+    The keys of mate are vertices in the graph, and mate[v] is v's partner
+    vertex in the matching.
+    """
+    matching = set()
+    for v, w in mate.items():
+        if w is not None and v < w:
+            matching.add((v, w))
+    return matching
+
+
 def matching_dict_to_set(matching):
     """Converts matching dict format to matching set format
 
@@ -873,68 +938,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
     return matching_dict_to_set(mate)
 
 
-class Graph:
-    def __init__(self):
-        self.adj = {}  # Adjacency list: {node: {neighbor: weight}}
-        self.node_list = []
 
-    def add_edge(self, u, v, weight=1):
-        """Adds an edge between nodes u and v with the specified weight."""
-        if u not in self.adj:
-            self.adj[u] = {}
-            self.node_list.append(u)
-        if v not in self.adj:
-            self.adj[v] = {}
-            self.node_list.append(v)
-
-        self.adj[u][v] = weight
-        self.adj[v][u] = weight  # Assuming undirected graph
-
-    def add_weighted_edges_from(self, edge_list):
-        """Adds multiple weighted edges from a list of (u, v, weight) tuples."""
-        for u, v, weight in edge_list:
-            self.add_edge(u, v, weight)
-
-    def __iter__(self):
-        """Allows iteration over the nodes in the graph."""
-        return iter(self.node_list) # list(self.adj.keys())
-
-    def edges(self, data=False):
-        """Iterates through edges, optionally including edge data (weights)."""
-        seen = set()
-        for u in self.adj:
-            for v in self.adj[u]:
-                if (u, v) not in seen and (v, u) not in seen:
-                    seen.add((u, v))
-                    if data:
-                        yield u, v, {'weight': self.adj[u][v]}
-                    else:
-                        yield u, v
-
-    def neighbors(self, node):
-        """Returns a list of neighbors for the given node."""
-        return list(self.adj[node].keys())
-
-    def __getitem__(self, node):
-        """Enables accessing neighbors and their weights using graph[node][neighbor]."""
-        return self.adj[node]
-    
-    def nodes(self):
-        """Returns an iterator over the nodes in the graph."""
-        return iter(self.node_list) # self.adj.keys()
-
-
-def matching_dict_to_set(mate):
-    """Convert matching represented as a dict to a set of tuples.
-
-    The keys of mate are vertices in the graph, and mate[v] is v's partner
-    vertex in the matching.
-    """
-    matching = set()
-    for v, w in mate.items():
-        if w is not None and v < w:
-            matching.add((v, w))
-    return matching
 
 from networkx import Graph as XGraph
 from networkx.algorithms.matching import max_weight_matching as nx_max_weight_matching
@@ -1020,5 +1024,5 @@ if __name__ == "__main__":
 
     results = compare_matchings()
 
-    with open("results.json", "w") as f:
-        json.dump(results, f)	
+    # with open("results.json", "w") as f:
+    #     json.dump(results, f)	
