@@ -1,65 +1,123 @@
 from itertools import repeat
-def matching_dict_to_set(matching):
-    edges = set()
-    for edge in matching.items():
-        u, v = edge
-        if (v, u) in edges or edge in edges:
-            continue
-        edges.add(edge)
-    return edges
-def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
-    class NoNode:
-        """Dummy value which is different from any node."""
-    class Blossom:
-        """Representation of a non-trivial blossom or sub-blossom."""
-        __slots__ = ["childs", "edges", "mybestedges"]
-        def leaves(self):
-            stack = [*self.childs]
-            while stack:
-                t = stack.pop()
-                if isinstance(t, Blossom):
-                    stack.extend(t.childs)
-                else:
-                    yield t
+from numbers import Number
+from typing import Any
+
+
+class NoNode:
+    """Dummy value which is different from any node."""
+
+
+class Blossom:
+    """Representation of a non-trivial blossom or sub-blossom."""
+
+    __slots__ = ["childs", "edges", "mybestedges"]
+
+    def leaves(self):
+        stack = [*self.childs]
+        while stack:
+            t = stack.pop()
+            if isinstance(t, Blossom):
+                stack.extend(t.childs)
+            else:
+                yield t
+
+
+class Graph:
+    def __init__(self):
+        self.adj: dict[str, dict[str, int]] = {}
+        self.node_list: list[str] = []
+
+    def add_edge(self, u: str, v: str, weight=1):
+        """Adds an edge between nodes u and v with the specified weight."""
+        if u not in self.adj:
+            self.adj[u] = {}
+            self.node_list.append(u)
+        if v not in self.adj:
+            self.adj[v] = {}
+            self.node_list.append(v)
+        self.adj[u][v] = weight
+        self.adj[v][u] = weight
+
+    def add_weighted_edges_from(self, edge_list):
+        """Adds multiple weighted edges from a list of (u, v, weight) tuples."""
+        for u, v, weight in edge_list:
+            self.add_edge(u, v, weight)
+
+    def __iter__(self):
+        """Allows iteration over the nodes in the graph."""
+        return iter(self.node_list)
+
+    def edges(self):
+        """Iterates through edges,  including weights."""
+        seen = set()
+        for u in self.adj:
+            for v in self.adj[u]:
+                if (u, v) not in seen and (v, u) not in seen:
+                    seen.add((u, v))
+                    yield u, v, self.adj[u][v]
+
+    def neighbors(self, node):
+        """Returns a list of neighbors for the given node."""
+        return list(self.adj[node].keys())
+
+    def __getitem__(self, node: str) -> tuple[dict[str, int], int]:
+        """Enables accessing neighbors and their weights using graph[node][neighbor]."""
+        return self.adj[node]
+
+    def nodes(self):
+        """Returns an iterator over the nodes in the graph."""
+        return iter(self.node_list)
+
+
+# custom type hint for something that is either a str a Blossom or NoNode
+NodeType = str | Blossom | type[NoNode]
+NullableNodeType = NodeType | None
+
+
+def max_weight_matching(G: "Graph", maxcardinality=False):
     gnodes: list[str] = list(G)
     if not gnodes:
         return set()
     maxweight = 0
     allinteger = True
-    for i, j, d in G.edges(data=True):
-        wt = d.get(weight, 1)
+    for i, j, d in G.edges():
+        wt = d
         if i != j and wt > maxweight:
             maxweight = wt
         allinteger = allinteger and (str(type(wt)).split("'")[1] in ("int", "long"))
     mate = {}
-    label = {}
-    labeledge = {}
-    inblossom : dict[str, str] = dict(zip(gnodes, gnodes))
-    blossomparent = {}
+    label: dict[NullableNodeType, int] = {}
+    labeledge: dict[NodeType, tuple[NodeType, NodeType] | None] = {}
+    inblossom: dict[NodeType, NodeType] = dict(zip(gnodes, gnodes))
+    blossomparent: dict[NullableNodeType, NullableNodeType] = {}
     for node in gnodes:
         blossomparent[node] = None
-    blossombase = dict(zip(gnodes, gnodes))
+    blossombase: dict[NodeType, NodeType] = dict(zip(gnodes, gnodes))
 
     bestedge = {}
-    # should be changed into pure python without repeat
-    dualvar : dict[str, int]= {node: maxweight for node in gnodes}
-    blossomdual = {}
-    allowedge = {}
-    queue = []
-    def slack(v, w):
+    dualvar: dict[NodeType, int] = {node: maxweight for node in gnodes}
+    blossomdual: dict[NullableNodeType, int] = {}
+    allowedge: dict[tuple[NodeType, NodeType], bool] = {}
+    queue: list[NodeType] = []
+
+    def slack(v: str, w: str) -> int:
         dualvar_v = dualvar[v]
         dualvar_w = dualvar[w]
         weight = 2 * G[v][w]
         print(f"{dualvar_v=} {dualvar_w=} {weight=}")
         return dualvar_v + dualvar_w - weight
-    def assignLabel(w, t, v):
+
+    def assignLabel(w: NodeType, t: int, v: NullableNodeType):
         b = inblossom[w]
         assert label.get(w) is None and label.get(b) is None
-        label[w] = label[b] = t
+        label[w] = t
+        label[b] = t
         if v is not None:
-            labeledge[w] = labeledge[b] = (v, w)
+            labeledge[w] = (v, w)
+            labeledge[b] = (v, w)
         else:
-            labeledge[w] = labeledge[b] = None
+            labeledge[w] = None
+            labeledge[b] = None
         bestedge[w] = bestedge[b] = None
         if t == 1:
             if isinstance(b, Blossom):
@@ -69,7 +127,11 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
         elif t == 2:
             base = blossombase[b]
             assignLabel(mate[base], 1, base)
-    def scanBlossom(v, w):
+
+    def scanBlossom(v: NullableNodeType, w: NullableNodeType) -> NullableNodeType:
+        """
+        Side effecting, touching label
+        """
         path = []
         base = NoNode
         while v is not NoNode:
@@ -94,6 +156,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
         for b in path:
             label[b] = 1
         return base
+
     def addBlossom(base, v, w):
         bb = inblossom[base]
         bv = inblossom[v]
@@ -102,8 +165,10 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
         blossombase[b] = base
         blossomparent[b] = None
         blossomparent[bb] = b
-        b.childs = path = []
-        b.edges = edgs = [(v, w)]
+        b.childs = []
+        path = []
+        b.edges = [(v, w)]
+        edgs = [(v, w)]
         while bv != bb:
             blossomparent[bv] = b
             path.append(bv)
@@ -166,8 +231,9 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
                 mybestedge = k
                 mybestslack = kslack
         bestedge[b] = mybestedge
-    def expandBlossom(b, endstage):
-        def _recurse(b, endstage):
+
+    def expandBlossom(b: Blossom, endstage: bool):
+        def _recurse(b: Blossom, endstage: bool):
             for s in b.childs:
                 blossomparent[s] = None
                 if isinstance(s, Blossom):
@@ -232,6 +298,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
             del blossomparent[b]
             del blossombase[b]
             del blossomdual[b]
+
         stack = [_recurse(b, endstage)]
         while stack:
             top = stack[-1]
@@ -240,8 +307,9 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
                 break
             else:
                 stack.pop()
-    def augmentBlossom(b, v):
-        def _recurse(b, v):
+
+    def augmentBlossom(b: Blossom, v):
+        def _recurse(b: Blossom, v):
             t = v
             while blossomparent[t] != b:
                 t = blossomparent[t]
@@ -272,6 +340,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
             b.edges = b.edges[i:] + b.edges[:i]
             blossombase[b] = blossombase[b.childs[0]]
             assert blossombase[b] == v
+
         stack = [_recurse(b, v)]
         while stack:
             top = stack[-1]
@@ -280,6 +349,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
                 break
             else:
                 stack.pop()
+
     def augmentMatching(v, w):
         for s, j in ((v, w), (w, v)):
             while 1:
@@ -301,6 +371,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
                 if isinstance(bt, Blossom):
                     augmentBlossom(bt, j)
                 mate[j] = s
+
     def verifyOptimum():
         if maxcardinality:
             vdualoffset = max(0, -min(dualvar.values()))
@@ -308,13 +379,13 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
             vdualoffset = 0
         assert min(dualvar.values()) + vdualoffset >= 0
         assert len(blossomdual) == 0 or min(blossomdual.values()) >= 0
-        for i, j, d in G.edges(data=True):
-            wt = d.get(weight, 1)
+        for i, j, d in G.edges():
+            wt = d
             if i == j:
                 continue
             s = dualvar[i] + dualvar[j] - 2 * wt
-            iblossoms = [i]
-            jblossoms = [j]
+            iblossoms: list[NullableNodeType] = [i]
+            jblossoms: list[NullableNodeType] = [j]
             while blossomparent[iblossoms[-1]] is not None:
                 iblossoms.append(blossomparent[iblossoms[-1]])
             while blossomparent[jblossoms[-1]] is not None:
@@ -336,6 +407,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
                 assert len(b.edges) % 2 == 1
                 for i, j in b.edges[1::2]:
                     assert mate[i] == j and mate[j] == i
+
     while 1:
         print("outer")
         label.clear()
@@ -397,7 +469,9 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
                 print("Break!")
                 break
             deltatype = -1
-            delta = deltaedge = deltablossom = None
+            delta: None | int | float = None
+            deltaedge: tuple[NodeType, NodeType] | None = None
+            deltablossom = None
             if not maxcardinality:
                 deltatype = 1
                 delta = min(dualvar.values())
@@ -453,14 +527,17 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
             elif deltatype == 2:
                 (v, w) = deltaedge
                 assert label[inblossom[v]] == 1
-                allowedge[(v, w)] = allowedge[(w, v)] = True
+                allowedge[(v, w)] = True
+                allowedge[(w, v)] = True
                 queue.append(v)
             elif deltatype == 3:
                 (v, w) = deltaedge
-                allowedge[(v, w)] = allowedge[(w, v)] = True
+                allowedge[(v, w)] = True
+                allowedge[(w, v)] = True
                 assert label[inblossom[v]] == 1
                 queue.append(v)
             elif deltatype == 4:
+                assert isinstance(deltablossom, Blossom)
                 expandBlossom(deltablossom, False)
         for v in mate:
             assert mate[mate[v]] == v
@@ -470,52 +547,13 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
             if b not in blossomdual:
                 continue
             if blossomparent[b] is None and label.get(b) == 1 and blossomdual[b] == 0:
+                assert isinstance(b, Blossom)
                 expandBlossom(b, True)
     if allinteger:
         verifyOptimum()
     return matching_dict_to_set(mate)
-class Graph:
-    def __init__(self):
-        self.adj: dict[str, dict[str, int]] = {}
-        self.node_list: list[str] = []
-    def add_edge(self, u: str, v: str, weight=1):
-        """Adds an edge between nodes u and v with the specified weight."""
-        if u not in self.adj:
-            self.adj[u] = {}
-            self.node_list.append(u)
-        if v not in self.adj:
-            self.adj[v] = {}
-            self.node_list.append(v)
-        self.adj[u][v] = weight
-        self.adj[v][u] = weight
-    def add_weighted_edges_from(self, edge_list):
-        """Adds multiple weighted edges from a list of (u, v, weight) tuples."""
-        for u, v, weight in edge_list:
-            self.add_edge(u, v, weight)
-    def __iter__(self):
-        """Allows iteration over the nodes in the graph."""
-        return iter(self.node_list)
-    def edges(self, data=False):
-        """Iterates through edges, optionally including edge data (weights)."""
-        seen = set()
-        for u in self.adj:
-            for v in self.adj[u]:
-                if (u, v) not in seen and (v, u) not in seen:
-                    seen.add((u, v))
-                    if data:
-                        yield u, v, {'weight': self.adj[u][v]}
-                    else:
-                        yield u, v
-    def neighbors(self, node):
-        """Returns a list of neighbors for the given node."""
-        return list(self.adj[node].keys())
-    def __getitem__(self, node: str) -> tuple[dict[str, int], int]:
-        """Enables accessing neighbors and their weights using graph[node][neighbor]."""
-        return self.adj[node]
-    
-    def nodes(self):
-        """Returns an iterator over the nodes in the graph."""
-        return iter(self.node_list)
+
+
 def matching_dict_to_set(mate: dict):
     """Convert matching represented as a dict to a set of tuples.
     The keys of mate are vertices in the graph, and mate[v] is v's partner
@@ -527,14 +565,21 @@ def matching_dict_to_set(mate: dict):
             matching.add((v, w))
     return matching
 
+
 if __name__ == "__main__":
     g = Graph()
     print("Graph:")
-    edges = [("A", "B", 6), ("A", "C", 2),
-              ("B", "C", 1), ("B", "D", 7),
-              ("C", "E", 9), ("D", "E", 3)]
+    edges = [
+        ("A", "B", 6),
+        ("A", "C", 2),
+        ("B", "C", 1),
+        ("B", "D", 7),
+        ("C", "E", 9),
+        ("D", "E", 3),
+    ]
 
     g.add_weighted_edges_from(edges)
     res = max_weight_matching(g)
     print("Pure Python:")
     print(res)
+    assert res == frozenset({('C', 'E'), ('B', 'D')})
