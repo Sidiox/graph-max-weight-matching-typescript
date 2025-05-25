@@ -126,7 +126,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
 
     const blossombase: Map<BasicNodeType, string> = new Map();
     gnodes.forEach(node => blossombase.set(node, node));
-    
+
     const bestedge: Map<NodeType, [string, string] | null> = new Map();
     const dualvar: Record<string, number> = {};
     gnodes.forEach(node => dualvar[node] = maxweight);
@@ -142,7 +142,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
         // console.log(`slack(${v},${w}): dv[${v}]=${dualvar_v}, dv[${w}]=${dualvar_w}, G[${v}][${w}]=${G.adj[v][w]}, result=${dualvar_v + dualvar_w - weight}`);
         return dualvar_v + dualvar_w - weight;
     }
-    
+
     function assignLabel(w_node: string, type: number, v_parent: PathEndpointType | null): void {
         const b_component = inblossom.get(w_node)!; // string or Blossom
         if (label.has(w_node) || label.has(b_component)) {
@@ -187,7 +187,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
 
         while (currentV !== NoNodeValue) {
             if (typeof currentV !== 'string') {
-                 throw new Error("currentV is not a string in scanBlossom main loop");
+                throw new Error("currentV is not a string in scanBlossom main loop");
             }
             const b_curr = inblossom.get(currentV)!;
 
@@ -202,7 +202,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
             const edge_info = labeledge.get(b_curr);
             if (edge_info === null || edge_info === undefined) {
                 if (!(blossombase.get(b_curr)! in mate)) {
-                     currentV = NoNodeValue;
+                    currentV = NoNodeValue;
                 } else {
                     throw new Error("Assertion failed: blossombase[b_curr] in mate but labeledge[b_curr] is null");
                 }
@@ -220,7 +220,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 }
                 const grandparentEdge = labeledge.get(blossomOfMate);
                 if (grandparentEdge === null || grandparentEdge === undefined) {
-                     throw new Error(`Assertion failed: labeledge of mate's blossom ${blossomOfMate} is null`);
+                    throw new Error(`Assertion failed: labeledge of mate's blossom ${blossomOfMate} is null`);
                 }
                 currentV = grandparentEdge[0]; // This is also a string (parent of mate in tree)
             }
@@ -231,8 +231,9 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
         }
 
         for (const b_path of path_marks) {
-            label.set(b_path, label.get(b_path)! & ~4); // Restore label (remove mark bit)
-            if (label.get(b_path)! === 1) { /* ensure it's 1 */ } else { /* error or readjust */ }
+            // label.set(b_path, label.get(b_path)! & ~4); // Restore label (remove mark bit)
+            label.set(b_path, 1)
+            // if (label.get(b_path)! === 1) { /* ensure it's 1 */ } else { /* error or readjust */ }
         }
         return base_common;
     }
@@ -275,7 +276,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
             w_path_node = w_lbl_edge[0];
             w_path_comp = inblossom.get(w_path_node)!;
         }
-        
+
         newBlossom.childs = p_childs;
         newBlossom.edges = p_edges; // CRITICAL: Assumed Python meant to assign collected edges
         if (newBlossom.edges.length % 2 === 0) {
@@ -330,7 +331,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
             bestedge.set(child_b, null);
         }
         newBlossom.mybestedges = Array.from(bestedgeto.values());
-        
+
         let mybestedge_for_newBlossom: [string, string] | null = null;
         let mybestslack_for_new_Blossom: number | null = null;
         for (const k_edge of newBlossom.mybestedges) {
@@ -342,7 +343,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
         }
         bestedge.set(newBlossom, mybestedge_for_newBlossom);
     }
-    
+
     function expandBlossom(b_to_expand: Blossom, endstage: boolean): void {
         function* _recurse(currentBlossom: Blossom, isEndstage: boolean): IterableIterator<Blossom> {
             for (const s_child of currentBlossom.childs) {
@@ -362,9 +363,9 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 const entryEdge = labeledge.get(currentBlossom)!; // [PathEndpointType, string]
                 const entryNodeName = entryEdge[1]; // The node (string) in currentBlossom where path enters
                 const entryChild = inblossom.get(entryNodeName)!; // The child component containing entryNodeName
-                
+
                 if (!currentBlossom.childs.includes(entryChild)) {
-                     throw new Error("Entry child determined by inblossom is not in currentBlossom.childs during expandBlossom");
+                    throw new Error("Entry child determined by inblossom is not in currentBlossom.childs during expandBlossom");
                 }
 
                 let j = currentBlossom.childs.indexOf(entryChild);
@@ -377,7 +378,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 while (j !== 0) {
                     j += jstep;
                     const edge_idx_abs = (j >= 0 ? j : j + currentBlossom.edges.length) % currentBlossom.edges.length;
-                    const next_edge_idx_abs = ((j - 1) >= 0 ? (j-1) : (j-1) + currentBlossom.edges.length) % currentBlossom.edges.length;
+                    const next_edge_idx_abs = ((j - 1) >= 0 ? (j - 1) : (j - 1) + currentBlossom.edges.length) % currentBlossom.edges.length;
 
 
                     let p_node: string, q_node: string;
@@ -386,17 +387,17 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     } else {
                         [q_node, p_node] = currentBlossom.edges[next_edge_idx_abs];
                     }
-                    
+
                     label.delete(path_w_node); // path_w_node is previous child node.
                     label.delete(q_node);       // q_node is current child node (matched to p_node).
                     assignLabel(path_w_node, 2, path_v_node);
 
                     allowedge.set(`${p_node},${q_node}`, true);
                     allowedge.set(`${q_node},${p_node}`, true);
-                    
+
                     j += jstep;
                     const edge_idx_abs2 = (j >= 0 ? j : j + currentBlossom.edges.length) % currentBlossom.edges.length;
-                    const next_edge_idx_abs2 = ((j - 1) >= 0 ? (j-1) : (j-1) + currentBlossom.edges.length) % currentBlossom.edges.length;
+                    const next_edge_idx_abs2 = ((j - 1) >= 0 ? (j - 1) : (j - 1) + currentBlossom.edges.length) % currentBlossom.edges.length;
 
                     if (jstep === 1) {
                         [path_v_node, path_w_node] = currentBlossom.edges[edge_idx_abs2];
@@ -427,8 +428,8 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     }
                     let v_node_to_relabel: string | undefined;
                     if (bv_child_on_path instanceof Blossom) {
-                        for (const v_leaf of bv_child_on_path.leaves()){
-                            if (label.has(v_leaf)){
+                        for (const v_leaf of bv_child_on_path.leaves()) {
+                            if (label.has(v_leaf)) {
                                 v_node_to_relabel = v_leaf;
                                 break;
                             }
@@ -438,13 +439,13 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     }
 
                     if (v_node_to_relabel && label.has(v_node_to_relabel)) {
-                         if (label.get(v_node_to_relabel)! !== 2) throw new Error("Assertion failed: label[v_node_to_relabel] == 2");
-                         if (inblossom.get(v_node_to_relabel)! !== bv_child_on_path) throw new Error("Assertion failed: inblossom[v_node_to_relabel] == bv_child_on_path");
+                        if (label.get(v_node_to_relabel)! !== 2) throw new Error("Assertion failed: label[v_node_to_relabel] == 2");
+                        if (inblossom.get(v_node_to_relabel)! !== bv_child_on_path) throw new Error("Assertion failed: inblossom[v_node_to_relabel] == bv_child_on_path");
 
                         label.delete(v_node_to_relabel);
                         const mate_of_base_bv = mate[blossombase.get(bv_child_on_path)!];
                         label.delete(mate_of_base_bv);
-                        
+
                         const prev_parent_in_tree = labeledge.get(v_node_to_relabel)![0]; // PathEndpointType
                         assignLabel(v_node_to_relabel, 2, prev_parent_in_tree);
                     }
@@ -473,22 +474,22 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
             }
         }
     }
-    
+
     function augmentBlossom(b_to_augment: Blossom, v_node_exposed: string): void {
         type AugmentTask = { blossom: Blossom; node: string };
-        
+
         function _processAugmentTask(currentBlossom: Blossom, exposed_node: string): AugmentTask[] {
             const subTasks: AugmentTask[] = [];
             let t_child_container: BasicNodeType | undefined;
 
             let trace_parent: BasicNodeType | null = inblossom.get(exposed_node)!;
-            while(trace_parent !== null && trace_parent !== currentBlossom && blossomparent.get(trace_parent) !== currentBlossom) {
+            while (trace_parent !== null && trace_parent !== currentBlossom && blossomparent.get(trace_parent) !== currentBlossom) {
                 trace_parent = blossomparent.get(trace_parent) || null;
             }
             if (trace_parent !== null && blossomparent.get(trace_parent) === currentBlossom) {
-                 t_child_container = trace_parent; // Found direct child
+                t_child_container = trace_parent; // Found direct child
             } else if (currentBlossom.childs.includes(inblossom.get(exposed_node)!)) {
-                 t_child_container = inblossom.get(exposed_node)!;
+                t_child_container = inblossom.get(exposed_node)!;
             } else { // Fallback: search manually
                 for (const child of currentBlossom.childs) {
                     if (child === exposed_node || (child instanceof Blossom && child.leaves().includes(exposed_node))) {
@@ -500,7 +501,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
             if (!t_child_container) throw new Error(`Child container for ${exposed_node} in ${currentBlossom} not found.`);
 
             if (t_child_container instanceof Blossom) {
-                subTasks.push({blossom: t_child_container, node: exposed_node});
+                subTasks.push({ blossom: t_child_container, node: exposed_node });
             }
 
             const i_start_idx = currentBlossom.childs.indexOf(t_child_container);
@@ -520,7 +521,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 // If jstep = 1 (forward), edge is edges[j_child_idx] (or python's b.edges[j]).
                 // If jstep = -1 (backward), edge is edges[prev_j_child_idx] (or python's b.edges[j-1]).
                 const edge_idx_for_match = (jstep === 1) ? j_child_idx
-                    : ((j_child_idx -1 + num_childs) % num_childs) ; // (j-1) in python list index
+                    : ((j_child_idx - 1 + num_childs) % num_childs); // (j-1) in python list index
 
                 if (jstep === 1) {
                     [w_match_node, x_match_node] = currentBlossom.edges[edge_idx_for_match];
@@ -529,7 +530,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 }
 
                 if (t_next_child instanceof Blossom) {
-                    subTasks.push({blossom: t_next_child, node: w_match_node});
+                    subTasks.push({ blossom: t_next_child, node: w_match_node });
                 }
 
                 j += jstep;
@@ -537,7 +538,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 const t_after_next_child = currentBlossom.childs[j_after_next_child_idx];
 
                 if (t_after_next_child instanceof Blossom) {
-                    subTasks.push({blossom: t_after_next_child, node: x_match_node});
+                    subTasks.push({ blossom: t_after_next_child, node: x_match_node });
                 }
                 mate[w_match_node] = x_match_node;
                 mate[x_match_node] = w_match_node;
@@ -548,17 +549,17 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
             blossombase.set(currentBlossom, blossombase.get(currentBlossom.childs[0])!);
 
             if (blossombase.get(currentBlossom)! !== exposed_node) {
-                 // This assertion from Python: assert blossombase[b] == v
-                 // This might mean the base vertex of the blossom should be the exposed vertex itself.
-                 blossombase.set(currentBlossom, exposed_node);
-                 if (blossombase.get(currentBlossom)! !== exposed_node) // Re-check
+                // This assertion from Python: assert blossombase[b] == v
+                // This might mean the base vertex of the blossom should be the exposed vertex itself.
+                blossombase.set(currentBlossom, exposed_node);
+                if (blossombase.get(currentBlossom)! !== exposed_node) // Re-check
                     console.warn(`Warning: blossombase for ${currentBlossom} set to ${exposed_node}, but re-get gives ${blossombase.get(currentBlossom)}`);
             }
             return subTasks;
         }
-        
-        const task_stack: AugmentTask[] = [{blossom: b_to_augment, node: v_node_exposed}];
-        while(task_stack.length > 0) {
+
+        const task_stack: AugmentTask[] = [{ blossom: b_to_augment, node: v_node_exposed }];
+        while (task_stack.length > 0) {
             const task = task_stack.pop()!;
             const newSubTasks = _processAugmentTask(task.blossom, task.node);
             task_stack.push(...newSubTasks);
@@ -573,17 +574,17 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
             while (true) {
                 const bs_comp = inblossom.get(s_node)!;
                 if (label.get(bs_comp)! !== 1) throw new Error(`Assertion failed: label of ${bs_comp} is not 1`);
-                
+
                 const lblEdge_bs = labeledge.get(bs_comp);
                 if (lblEdge_bs === null || lblEdge_bs === undefined) {
                     if (blossombase.get(bs_comp)! in mate) {
-                         throw new Error(`Assertion: Matched node ${blossombase.get(bs_comp)} at end of path but labeledge is null.`);
+                        throw new Error(`Assertion: Matched node ${blossombase.get(bs_comp)} at end of path but labeledge is null.`);
                     }
                 } else {
                     const prevNodeInTree = lblEdge_bs[0]; // PathEndpointType (string)
-                     if (prevNodeInTree !== mate[blossombase.get(bs_comp)!]) {
-                         throw new Error(`Assertion: labeledge[${bs_comp}][0] != mate[blossombase[${bs_comp}]]`);
-                     }
+                    if (prevNodeInTree !== mate[blossombase.get(bs_comp)!]) {
+                        throw new Error(`Assertion: labeledge[${bs_comp}][0] != mate[blossombase[${bs_comp}]]`);
+                    }
                 }
 
                 if (bs_comp instanceof Blossom) {
@@ -628,7 +629,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
         labeledge.clear();
         bestedge.clear();
         blossomdual.forEach(b => { if (b instanceof Blossom) b.mybestedges = null; }); // This is wrong, keys are Blossoms
-        for(const b_key of blossomdual.keys()) { b_key.mybestedges = null; }
+        for (const b_key of blossomdual.keys()) { b_key.mybestedges = null; }
 
         allowedge.clear();
         queue.length = 0;
@@ -661,13 +662,13 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
 
                     if (!allowedge.has(edgeKey_vw)) {
                         const kslack_val = slack(v_bfs, w_neighbor);
-                         console.log(`Slack for (${v_bfs}, ${w_neighbor}): ${kslack_val}`);
+                        console.log(`Slack for (${v_bfs}, ${w_neighbor}): ${kslack_val}`);
                         if (kslack_val <= 0) {
                             allowedge.set(edgeKey_vw, true);
                             allowedge.set(edgeKey_wv, true);
                         }
                     }
-                    
+
                     if (allowedge.has(edgeKey_vw)) {
                         console.log(`Edge (${v_bfs},${w_neighbor}) is allowed.`);
                         if (!label.has(bw_neighbor)) { // Case 1: w_neighbor's component is unlabeled
@@ -694,8 +695,8 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                                 bestedge.set(bv_bfs, [v_bfs, w_neighbor]);
                             }
                         } else if (!label.has(w_neighbor)) { // w_neighbor (node) itself is unlabeled
-                             const current_best_w = bestedge.get(w_neighbor); // bestedge for node w_neighbor
-                             if (current_best_w === null || current_best_w === undefined || kslack_val < slack(...current_best_w)) {
+                            const current_best_w = bestedge.get(w_neighbor); // bestedge for node w_neighbor
+                            if (current_best_w === null || current_best_w === undefined || kslack_val < slack(...current_best_w)) {
                                 bestedge.set(w_neighbor, [v_bfs, w_neighbor]);
                             }
                         }
@@ -731,14 +732,14 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     }
                 }
             }
-            
+
             // Iterate over roots of blossom trees (parent is null) and gnodes not in blossomparent (should be covered)
             const rootComponents: BasicNodeType[] = [];
             blossomparent.forEach((parent, child) => { if (parent === null) rootComponents.push(child); });
             gnodes.forEach(gn => { if (!blossomparent.has(gn)) rootComponents.push(gn); }); // Should already be in if they became part of tree.
 
             for (const b_comp of new Set(rootComponents)) { // Use Set to get unique components
-                 if (label.get(b_comp) === 1 && bestedge.has(b_comp) && bestedge.get(b_comp) !== null) {
+                if (label.get(b_comp) === 1 && bestedge.has(b_comp) && bestedge.get(b_comp) !== null) {
                     const kslack_val = slack(...bestedge.get(b_comp)!);
                     const d_val = allinteger ? (kslack_val / 2) : (kslack_val / 2.0);
                     if (allinteger && kslack_val % 2 !== 0) throw new Error("Assertion: kslack not even for integer weights (Type 3 delta)");
@@ -749,7 +750,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     }
                 }
             }
-            
+
             for (const b_dual_key of blossomdual.keys()) { // Keys are Blossoms
                 if (blossomparent.get(b_dual_key) === null && label.get(b_dual_key) === 2) {
                     const dual_val = blossomdual.get(b_dual_key)!;
@@ -781,7 +782,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     else if (b_label === 2) blossomdual.set(b_dual_key, blossomdual.get(b_dual_key)! - delta);
                 }
             }
-             console.log(`Duals updated with delta=${delta}, type=${deltatype}`);
+            console.log(`Duals updated with delta=${delta}, type=${deltatype}`);
 
             if (deltatype === 1) break mainloop_bfs; // No change or special termination
             else if (deltatype === 2) { // Edge (v,w) = deltaedge. v is unlabelled, w is outer. Add w to queue (outer one).
@@ -797,9 +798,9 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     // For now, following assignLabel strategy:
                     const unlabelledNode = !label.has(inblossom.get(v_e)!) ? v_e : w_e;
                     const outerNode = (unlabelledNode === v_e) ? w_e : v_e;
-                    if(label.get(inblossom.get(outerNode)!) !== 1 || label.has(inblossom.get(unlabelledNode)!)) {
-                         console.warn("Delta type 2 edge endpoints not as expected (unlabelled, outer). Defaulting to Python's deltaedge[0].");
-                         queue.push(deltaedge![0]); // Fallback to Python's literal translation if roles unclear.
+                    if (label.get(inblossom.get(outerNode)!) !== 1 || label.has(inblossom.get(unlabelledNode)!)) {
+                        console.warn("Delta type 2 edge endpoints not as expected (unlabelled, outer). Defaulting to Python's deltaedge[0].");
+                        queue.push(deltaedge![0]); // Fallback to Python's literal translation if roles unclear.
                     } else {
                         assignLabel(unlabelledNode, 2, outerNode);
                     }
@@ -814,7 +815,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 expandBlossom(deltablossom_obj, false);
             }
         } // End mainloop_bfs (inner while true for dual adjustment and BFS step)
-        
+
         // Check if augmented in this phase
         if (!augmented) break; // No augmentation in this phase, algorithm terminates
 
@@ -825,8 +826,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
             if (blossomdual.has(b_key) && // Check if still exists (not expanded already)
                 blossomparent.get(b_key) === null &&
                 label.get(b_key) === 1 &&
-                blossomdual.get(b_key)! === 0)
-            {
+                blossomdual.get(b_key)! === 0) {
                 if (!(b_key instanceof Blossom)) throw new Error("Non-blossom key in blossomdual with T1 label and 0 dual");
                 expandBlossom(b_key, true); // Endstage expansion
             }
@@ -891,9 +891,9 @@ if (require.main === module) { // Basic test runner equivalent to if __name__ ==
     console.log("TypeScript Result:");
     console.log(res); // Set { [ 'C', 'E' ], [ 'B', 'D' ] } or Set { [ 'B', 'D' ], [ 'C', 'E' ] }
 
-    
+
     // Basic assertion for the example
-    const expected = new Set<[string,string]>();
+    const expected = new Set<[string, string]>();
     expected.add(["C", "E"]);
     expected.add(["A", "B"]);
 
@@ -904,7 +904,7 @@ if (require.main === module) { // Basic test runner equivalent to if __name__ ==
         // Convert Set<[string,string]> to something comparable like Set<string> ("u,v")
         const resComparable = new Set(Array.from(res).map(p => `${p[0]},${p[1]}`.split(',').sort().join(',')));
         const expComparable = new Set(Array.from(expected).map(p => `${p[0]},${p[1]}`.split(',').sort().join(',')));
-        
+
         for (const item of resComparable) {
             if (!expComparable.has(item)) {
                 match = false;
@@ -922,4 +922,4 @@ if (require.main === module) { // Basic test runner equivalent to if __name__ ==
     }
 }
 
-export {Graph, maxWeightMatching};
+export { Graph, maxWeightMatching };
