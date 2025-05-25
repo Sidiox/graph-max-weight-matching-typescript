@@ -1,4 +1,5 @@
 from itertools import repeat
+import json
 import random
 
 def matching_dict_to_set(matching):
@@ -940,11 +941,13 @@ from networkx.algorithms.matching import max_weight_matching as nx_max_weight_ma
 
 
 
-def compare_matchings(num_tests=100, num_nodes_range=(4, 100), num_edges_range=(5, 20), weight_range=(1, 10)):
+def compare_matchings(num_tests=100, num_nodes_range=(4, 25), num_edges_range=(5, 20), weight_range=(1, 10)):
     """
     Compare the outputs of max_weight_matching (pure Python) and nx_max_weight_matching (NetworkX-based)
     over randomly generated graphs.
     """
+    results = []
+
     for i in range(num_tests):
         num_nodes = random.randint(*num_nodes_range)
         num_edges = random.randint(*num_edges_range)
@@ -954,6 +957,9 @@ def compare_matchings(num_tests=100, num_nodes_range=(4, 100), num_edges_range=(
         possible_edges = [(u, v) for u in range(num_nodes) for v in range(u + 1, num_nodes)]
         edges = random.sample(possible_edges, min(num_edges, len(possible_edges)))
         weighted_edges = [(u, v, random.randint(weight_min, weight_max)) for u, v in edges]
+        # convert into str, str, int
+        weighted_edges = [(chr(u + 65), chr(v + 65), int(w)) for u, v, w in weighted_edges]
+
 
         # Construct Graph using your implementation
         g1 = Graph()
@@ -978,7 +984,14 @@ def compare_matchings(num_tests=100, num_nodes_range=(4, 100), num_edges_range=(
             print("Pure Python:", result1)
             print("NetworkX:", result2)
 
+        results.append(
+            {"edges": weighted_edges,
+             "result": list(result1)
+             }
+        )
+
     print("All tests passed!")
+    return results
 
 
 if __name__ == "__main__":
@@ -1005,4 +1018,7 @@ if __name__ == "__main__":
     print(g[2][3])
 
 
-    # compare_matchings()
+    results = compare_matchings()
+
+    with open("results.json", "w") as f:
+        json.dump(results, f)	
