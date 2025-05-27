@@ -376,7 +376,6 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 let path_w_node = entryEdge[1]; // string - node in currentBlossom
 
                 while (j !== 0) {
-                    j += jstep;
                     const edge_idx_abs = (j >= 0 ? j : j + currentBlossom.edges.length) % currentBlossom.edges.length;
                     const next_edge_idx_abs = ((j - 1) >= 0 ? (j - 1) : (j - 1) + currentBlossom.edges.length) % currentBlossom.edges.length;
 
@@ -406,6 +405,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     }
                     allowedge.set(`${path_v_node},${path_w_node}`, true);
                     allowedge.set(`${path_w_node},${path_v_node}`, true);
+                    j += jstep;
                 }
 
                 const bw_child_at_base = currentBlossom.childs[0]; // childs[j] after loop (j is 0)
