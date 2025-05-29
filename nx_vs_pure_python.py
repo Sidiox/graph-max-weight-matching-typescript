@@ -76,8 +76,14 @@ def compare_matchings(
 
 
 if __name__ == "__main__":
-    # int comparison
-    # results = compare_matchings()
+    # base small int graph
+    results = compare_matchings()
+
+    # large int graph (which has lower coverage than the above)
+    results = compare_matchings(
+        num_edges_range=(4, 200),
+        num_nodes_range=(10, 200),
+    )
 
     # float comparison
     results = compare_matchings(
