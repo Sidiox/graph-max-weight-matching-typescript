@@ -144,6 +144,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
     }
 
     function assignLabel(w_node: string, type: number, v_parent: PathEndpointType | null): void {
+        console.log(`assignLabel(${w_node}, ${type})`);	
         const b_component = inblossom.get(w_node)!; // string or Blossom
         if (label.has(w_node) || label.has(b_component)) {
             throw new Error(`Assertion failed: label already set for ${w_node} or ${b_component}`);
@@ -164,6 +165,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
 
         if (type === 1) { // Outer node/component
             if (b_component instanceof Blossom) {
+                console.log(`Adding leaves to queue (${queue.length}) ${b_component.leaves().length}`)
                 queue.push(...b_component.leaves());
             } else { // b_component is string
                 queue.push(b_component);
@@ -239,6 +241,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
     }
 
     function addBlossom(base_node: string, v_orig: string, w_orig: string): void {
+        console.log("Adding blossom for node:", base_node, "with parent:", v_orig, "and child:", w_orig);
         const bb_base_comp = inblossom.get(base_node)!;
         let v_curr_comp = inblossom.get(v_orig)!;
         let w_curr_comp = inblossom.get(w_orig)!;
@@ -291,6 +294,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
         for (const leaf_node of newBlossom.leaves()) { // string
             // Use inblossom.get(leaf_node) before update to check old label
             if (label.get(inblossom.get(leaf_node)!) === 2) {
+                console.log(`Adding to queue (${queue.length}) ${leaf_node}`)
                 queue.push(leaf_node);
             }
             inblossom.set(leaf_node, newBlossom); // Update inblossom map for leaves
@@ -346,6 +350,9 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
 
     function expandBlossom(b_to_expand: Blossom, endstage: boolean): void {
         function* _recurse(currentBlossom: Blossom, isEndstage: boolean): IterableIterator<Blossom> {
+
+            console.log(`Expanding Blossom: ${currentBlossom.childs.length}`)
+
             for (const s_child of currentBlossom.childs) {
                 blossomparent.set(s_child, null);
                 if (s_child instanceof Blossom) {
@@ -389,6 +396,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
 
                     label.delete(path_w_node); // path_w_node is previous child node.
                     label.delete(q_node);       // q_node is current child node (matched to p_node).
+                    console.log("Assigning label in expandBlossom")
                     assignLabel(path_w_node, 2, path_v_node);
 
                     allowedge.set(`${p_node},${q_node}`, true);
@@ -473,6 +481,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 recurse_stack.pop();
             }
         }
+        console.log(`Expanded Blossom: ${b_to_expand.childs.length}`)
     }
 
     function augmentBlossom(b_to_augment: Blossom, v_node_exposed: string): void {
@@ -666,7 +675,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
 
                     if (!allowedge.has(edgeKey_vw)) {
                         const kslack_val = slack(v_bfs, w_neighbor);
-                        console.log(`Slack for (${v_bfs}, ${w_neighbor}): ${kslack_val}`);
+                        // console.log(`Slack for (${v_bfs}, ${w_neighbor}): ${kslack_val.toFixed(2)}`);
                         if (kslack_val <= 0) {
                             allowedge.set(edgeKey_vw, true);
                             allowedge.set(edgeKey_wv, true);
@@ -748,6 +757,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     const d_val = allinteger ? (kslack_val / 2) : (kslack_val / 2.0);
                     if (allinteger && kslack_val % 2 !== 0) throw new Error("Assertion: kslack not even for integer weights (Type 3 delta)");
                     if (deltatype === -1 || d_val < delta) {
+                        console.log(`Deltatype 3: d=${d_val.toExponential(3)} kslack=${kslack_val.toExponential(3)}`);
                         delta = d_val;
                         deltatype = 3;
                         deltaedge = bestedge.get(b_comp)!;
@@ -786,33 +796,44 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     else if (b_label === 2) blossomdual.set(b_dual_key, blossomdual.get(b_dual_key)! - delta);
                 }
             }
-            console.log(`Duals updated with delta=${delta}, type=${deltatype}`);
+            console.log(`Duals updated with delta=${delta.toExponential(3)}, type=${deltatype}`);
 
-            if (deltatype === 1) break mainloop_bfs; // No change or special termination
+            if (deltatype === 1) {
+                break mainloop_bfs; // No change or special termination
+            }
             else if (deltatype === 2) { // Edge (v,w) = deltaedge. v is unlabelled, w is outer. Add w to queue (outer one).
                 const [v_e, w_e] = deltaedge!;
-                allowedge.set(`${v_e},${w_e}`, true); allowedge.set(`${w_e},${v_e}`, true);
+                allowedge.set(`${v_e},${w_e}`, true);
+                allowedge.set(`${w_e},${v_e}`, true);
                 const nodeToQueue = label.get(inblossom.get(v_e)!) === 1 ? v_e : (label.get(inblossom.get(w_e)!) === 1 ? w_e : null);
-                if (nodeToQueue) queue.push(nodeToQueue); else {
-                    // This case means deltaedge's endpoints are not Type 1. This might imply Type 2 logic in Python
-                    // `queue.append(v)` means `v` is the unlabelled node that now has a tight edge to an outer node.
-                    // That `v` should be processed to become Type 2. Its mate becomes Type 1 and added to queue.
-                    // `assignLabel(v_unlabelled, 2, w_outer)` is the standard step.
-                    // Python's `queue.append(v)` (where v is unlabelled) is non-standard for BFS queue of Type 1.
-                    // For now, following assignLabel strategy:
-                    const unlabelledNode = !label.has(inblossom.get(v_e)!) ? v_e : w_e;
-                    const outerNode = (unlabelledNode === v_e) ? w_e : v_e;
-                    if (label.get(inblossom.get(outerNode)!) !== 1 || label.has(inblossom.get(unlabelledNode)!)) {
-                        console.warn("Delta type 2 edge endpoints not as expected (unlabelled, outer). Defaulting to Python's deltaedge[0].");
-                        queue.push(deltaedge![0]); // Fallback to Python's literal translation if roles unclear.
-                    } else {
-                        assignLabel(unlabelledNode, 2, outerNode);
-                    }
-                }
+                console.log(`deltatype=2 adding to queue (${queue.length}) ${nodeToQueue}`)
+                queue.push(v_e);
+                // if (nodeToQueue) {
+                //     console.log(`Adding to queue (${queue.length}) ${nodeToQueue}`)
+                //     queue.push(nodeToQueue);
+
+                // } else {
+                //     // This case means deltaedge's endpoints are not Type 1. This might imply Type 2 logic in Python
+                //     // `queue.append(v)` means `v` is the unlabelled node that now has a tight edge to an outer node.
+                //     // That `v` should be processed to become Type 2. Its mate becomes Type 1 and added to queue.
+                //     // `assignLabel(v_unlabelled, 2, w_outer)` is the standard step.
+                //     // Python's `queue.append(v)` (where v is unlabelled) is non-standard for BFS queue of Type 1.
+                //     // For now, following assignLabel strategy:
+                //     const unlabelledNode = !label.has(inblossom.get(v_e)!) ? v_e : w_e;
+                //     const outerNode = (unlabelledNode === v_e) ? w_e : v_e;
+                //     if (label.get(inblossom.get(outerNode)!) !== 1 || label.has(inblossom.get(unlabelledNode)!)) {
+                //         console.warn("Delta type 2 edge endpoints not as expected (unlabelled, outer). Defaulting to Python's deltaedge[0].");
+                //         queue.push(deltaedge![0]); // Fallback to Python's literal translation if roles unclear.
+                //     } else {
+                //         assignLabel(unlabelledNode, 2, outerNode);
+                //     }
+                // }
             } else if (deltatype === 3) { // Both ends of deltaedge are in outer components
                 const [v_e, w_e] = deltaedge!;
                 allowedge.set(`${v_e},${w_e}`, true); allowedge.set(`${w_e},${v_e}`, true);
                 if (label.get(inblossom.get(v_e)!) !== 1) throw new Error("Assertion: Type 3 deltaedge[0] not outer");
+
+                console.log(`deltatype=3 adding to queue (${queue.length}) ${v_e}`)
                 queue.push(v_e);
             } else if (deltatype === 4) {
                 if (!(deltablossom_obj instanceof Blossom)) throw new Error("Deltablossom_obj not a Blossom instance for Type 4 delta");
