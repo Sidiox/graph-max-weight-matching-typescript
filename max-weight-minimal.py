@@ -1,8 +1,8 @@
+from decimal import Decimal
 from itertools import repeat
 import json
 from numbers import Number
 from typing import Any
-
 
 class NoNode:
     """Dummy value which is different from any node."""
@@ -109,6 +109,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
         return dualvar_v + dualvar_w - weight
 
     def assignLabel(w: NodeType, t: int, v: NullableNodeType):
+        print(f"assignLabel({w}, {t})")
         b = inblossom[w]
         assert label.get(w) is None and label.get(b) is None
         label[w] = label[b] = t
@@ -119,7 +120,9 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
         bestedge[w] = bestedge[b] = None
         if t == 1:
             if isinstance(b, Blossom):
-                queue.extend(b.leaves())
+                leaves = list(b.leaves())
+                print(f"Adding leaves to queue ({len(queue)}) {len(leaves)}")
+                queue.extend(leaves)
             else:
                 queue.append(b)
         elif t == 2:
@@ -156,6 +159,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
         return base
 
     def addBlossom(base, v, w):
+        print("Adding blossom for node:", base, "with parent:", v, "and child:", w)
         bb = inblossom[base]
         bv = inblossom[v]
         bw = inblossom[w]
@@ -192,6 +196,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
         blossomdual[b] = 0
         for v in b.leaves():
             if label[inblossom[v]] == 2:
+                print(f"Adding to queue ({len(queue)}) {v}")
                 queue.append(v)
             inblossom[v] = b
         bestedgeto = {}
@@ -230,6 +235,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
 
     def expandBlossom(b: Blossom, endstage: bool):
         def _recurse(b: Blossom, endstage: bool):
+            print(f"Expanding Blossom: {len(b.childs)}")
             for s in b.childs:
                 blossomparent[s] = None
                 if isinstance(s, Blossom):
@@ -256,6 +262,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
                         q, p = b.edges[j - 1]
                     label[w] = None
                     label[q] = None
+                    print("Assigning label in expandBlossom")
                     assignLabel(w, 2, v)
                     allowedge[(p, q)] = allowedge[(q, p)] = True
                     j += jstep
@@ -303,6 +310,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
                 break
             else:
                 stack.pop()
+        print(f"Expanded Blossom: {len(b.childs)}")
 
     def augmentBlossom(b: Blossom, v):
         def _recurse(b: Blossom, v):
@@ -436,7 +444,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
                         continue
                     if (v, w) not in allowedge:
                         kslack = slack(v, w)
-                        print(f"Slack for ({v}, {w}): {kslack}")
+                        # print(f"Slack for ({v}, {w}): {kslack:.2f}")
                         if kslack <= 0:
                             allowedge[(v, w)] = allowedge[(w, v)] = True
                     if (v, w) in allowedge:
@@ -491,6 +499,7 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
                     else:
                         d = kslack / 2.0
                     if deltatype == -1 or d < delta:
+                        print(f"Deltatype 3: {d=:.3e} {kslack=:.3e}")
                         delta = d
                         deltatype = 3
                         deltaedge = bestedge[b]
@@ -520,19 +529,21 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
                         blossomdual[b] -= delta
 
 
-            print(f"Duals updated with delta={delta}, type={deltatype}")
+            print(f"Duals updated with {delta=:.3e}, type={deltatype}")
             if deltatype == 1:
                 break
             elif deltatype == 2:
                 (v, w) = deltaedge
                 assert label[inblossom[v]] == 1
                 allowedge[(v, w)] = allowedge[(w, v)] = True
+                print(f"{deltatype=} adding to queue ({len(queue)}) {v}")
                 queue.append(v)
             elif deltatype == 3:
                 (v, w) = deltaedge
                 allowedge[(v, w)] = True
                 allowedge[(w, v)] = True
                 assert label[inblossom[v]] == 1
+                print(f"{deltatype=} adding to queue ({len(queue)}) {v}")
                 queue.append(v)
             elif deltatype == 4:
                 assert isinstance(deltablossom, Blossom)
@@ -583,19 +594,35 @@ if __name__ == "__main__":
     # assert res == frozenset({('C', 'E'), ('B', 'D')})
 
 
-    test_set = []
-    with open("results.json") as f:
-        test_set = json.load(f)
+    # test_set = []
+    # with open("results.json") as f:
+    #     test_set = json.load(f)
 
-    for test in test_set[3:4]:
-        g = Graph()
-        edges = test["edges"]
-        g.add_weighted_edges_from(edges)
-        res = max_weight_matching(g)
-        print("Pure Python:")
-        print(res)
-        ref = test["result"]
-        res = sorted([sorted(x) for x in res])
-        ref = sorted([sorted(x) for x in ref])
+    # for test in test_set[3:4]:
+    #     g = Graph()
+    #     edges = test["edges"]
+    #     g.add_weighted_edges_from(edges)
+    #     res = max_weight_matching(g)
+    #     print("Pure Python:")
+    #     print(res)
+    #     ref = test["result"]
+    #     res = sorted([sorted(x) for x in res])
+    #     ref = sorted([sorted(x) for x in ref])
 
-        assert res == ref, f"{res} {ref} "
+    #     assert res == ref, f"{res} {ref} "
+
+    inputgraph_path = "test_graph.json"
+
+    inputedges = []
+    # inputedges = {}
+    with open(inputgraph_path, 'r') as file:
+        data = json.load(file)
+        for edge in data['edges']:
+            # print(edge)
+            # inputedges[(edge[0], edge[1])] = edge[2]
+            inputedges.append(edge)
+
+    g = Graph()
+    g.add_weighted_edges_from(inputedges)
+    res = max_weight_matching(g)
+
