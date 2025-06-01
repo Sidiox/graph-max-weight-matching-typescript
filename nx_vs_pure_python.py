@@ -53,7 +53,7 @@ def compare_matchings(
         result1 = max_weight_matching(g1)
         result1_weight = 0
         for u, v in result1:
-            result1_weight += g1[u][v]["weight"]
+            result1_weight += g1[u][v]
         normalized_result1 = {frozenset(edge) for edge in result1}
 
         # Construct Graph using NetworkX-compatible implementation
