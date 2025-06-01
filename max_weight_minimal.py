@@ -1,6 +1,8 @@
 """
 Minimal version of https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.matching.max_weight_matching.html
+Added typehints
 Removed all comments
+Removed need for itertools.repeat
 """
 
 
