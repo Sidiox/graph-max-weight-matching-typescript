@@ -10,6 +10,15 @@ This repo contains:
 - `nx_vs_pure_python.py`: test script to ensure my NetworkX code extraction went well, also used to dump graphs for TypeScript testing
 - `ts_vs_py.test.ts`: test script to ensure the TypeScript implementation matches the Python solutions, compares solution and cost
 
+To test the Python vs TypeScript implementations:
+```
+python nx_vs_pure_python.py
+```
+Yields 3 json files filled with 10 graphs.
+Which can then be tested against TypeScript:
+```
+bun test ts_vs_py.test.ts
+```
 
 # References
 - [Zvi Galil, Efficient algorithms for finding maximum matching in graphs, ACM Computing Surveys, 1986.](https://dl.acm.org/doi/10.1145/6462.6502)
