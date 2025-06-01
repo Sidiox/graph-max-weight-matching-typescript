@@ -10,6 +10,31 @@ This repo contains:
 - `nx_vs_pure_python.py`: test script to ensure my NetworkX code extraction went well, also used to dump graphs for TypeScript testing
 - `ts_vs_py.test.ts`: test script to ensure the TypeScript implementation matches the Python solutions, compares solution and cost
 
+## Using the implementation
+```typescript
+import { Graph } from './max-weight-matching.ts';
+import { maxWeightMatching } from './max-weight-matching.ts';
+if (require.main === module) {
+    const g = new Graph();
+    console.log("Graph:");
+    const edges: [string, string, number][] = [
+        ["A", "B", 6],
+        ["A", "C", 2],
+        ["B", "C", 1],
+        ["B", "D", 2],
+        ["C", "E", 9],
+        ["D", "E", 3],
+    ];
+
+    g.addWeightedEdgesFrom(edges);
+    const res = maxWeightMatching(g);
+    console.log("TypeScript Result:");
+    console.log(res);
+}
+```
+
+
+## Testing NetworkX vs Python vs TypeScript
 To test the Python vs TypeScript implementations:
 ```
 python nx_vs_pure_python.py
