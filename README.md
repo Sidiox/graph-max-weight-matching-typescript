@@ -4,7 +4,7 @@ Experiment in translation NetworkX source code https://networkx.org/documentatio
 This repo contains:
 - `max_weight.py`: extracted source code from NetworkX
 - `max_weight_minimal.py`: minimized version of the NetworkX implementation with type annotations
-- `max-weight-matching.ts`
+- `max-weight-matching.ts`: TypeScript version of the algorithm
 - `chat-transcripts`: folder with the original LLM chat transcripts
 - `transcrypt-attempt`: folder with generated code by [transcrypt](https://www.transcrypt.org/)
 - `nx_vs_pure_python.py`: test script to ensure my NetworkX code extraction went well, also used to dump graphs for TypeScript testing
