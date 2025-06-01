@@ -1,3 +1,42 @@
+"""
+NetworkX max weight matching implementation
+https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.matching.max_weight_matching.html
+
+Copyright (c) 2004-2025, NetworkX Developers
+Aric Hagberg <hagberg@lanl.gov>
+Dan Schult <dschult@colgate.edu>
+Pieter Swart <swart@lanl.gov>
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+  * Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above
+    copyright notice, this list of conditions and the following
+    disclaimer in the documentation and/or other materials provided
+    with the distribution.
+
+  * Neither the name of the NetworkX Developers nor the names of its
+    contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""
 from itertools import repeat
 import json
 import random
@@ -263,7 +302,6 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
     # by two ensures that all values remain integers throughout the algorithm).
     # Initially, u(v) = maxweight / 2.
     dualvar = dict(zip(gnodes, repeat(maxweight)))
-    print(f"{dualvar=}")
     # If b is a non-trivial blossom,
     # blossomdual[b] = z(b) where z(b) is b's variable in the dual
     # optimization problem.
@@ -282,7 +320,6 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
         dualvar_v = dualvar[v]
         dualvar_w = dualvar[w]
         weight = 2 * G[v][w]
-        print(f"{dualvar_v=} {dualvar_w=} {weight=}")
         return dualvar_v + dualvar_w - weight
 
     # Assign label t to the top-level blossom containing vertex w,
@@ -316,11 +353,9 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
         # Trace back from v and w, placing breadcrumbs as we go.
         path = []
         base = NoNode
-        print(f"Starting scanBlossom with v={v}, w={w}")
         while v is not NoNode:
             # Look for a breadcrumb in v's blossom or put a new breadcrumb.
             b = inblossom[v]
-            print(f"{b=} {label[b]=}")
             if label[b] & 4:
                 base = blossombase[b]
                 break
@@ -328,7 +363,6 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
             path.append(b)
             label[b] = 5
             # Trace one step back.
-            print(f"{labeledge[b]=}")
             if labeledge[b] is None:
                 # The base of blossom b is single; stop tracing this path.
                 assert blossombase[b] not in mate
@@ -707,7 +741,6 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
 
     # Main loop: continue until no further improvement is possible.
     while 1:
-        print("outer")
         # Each iteration of this loop is a "stage".
         # A stage finds an augmenting path and uses that to improve
         # the matching.
@@ -736,7 +769,6 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
         # Loop until we succeed in augmenting the matching.
         augmented = 0
         while 1:
-            print(f"Inner queue length: {len(queue)}")
             # Each iteration of this loop is a "substage".
             # A substage tries to find an augmenting path;
             # if found, the path is used to improve the matching and
@@ -747,10 +779,8 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
             # Continue labeling until all vertices which are reachable
             # through an alternating path have got a label.
             while queue and not augmented:
-                print(f"Inner queue {len(queue)=} {augmented=}")
                 # Take an S vertex from the queue.
                 v = queue.pop()
-                print(f"{v=}")
                 assert label[inblossom[v]] == 1
 
                 # Scan its neighbors:
@@ -765,15 +795,11 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
                         continue
                     if (v, w) not in allowedge:
                         kslack = slack(v, w)
-                        print(f"kslack {kslack}")
                         if kslack <= 0:
                             # edge k has zero slack => it is allowable
                             allowedge[(v, w)] = allowedge[(w, v)] = True
-                    print(f"negh ${allowedge}")
                     if (v, w) in allowedge:
-                        print(f"{v=} {w=}")
                         if label.get(bw) is None:
-                            print("C1")
                             # (C1) w is a free vertex;
                             # label w with T and label its mate with S (R12).
                             assignLabel(w, 2, v)
@@ -781,7 +807,6 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
                             # (C2) w is an S-vertex (not in the same blossom);
                             # follow back-links to discover either an
                             # augmenting path or a new blossom.
-                            print("C2")
                             base = scanBlossom(v, w)
                             if base is not NoNode:
                                 # Found a new blossom; add it to the blossom
@@ -814,7 +839,6 @@ def max_weight_matching(G: "Graph", maxcardinality=False, weight="weight"):
                             bestedge[w] = (v, w)
 
             if augmented:
-                print("Break!")
                 break
 
             # There is no augmenting path under these constraints;
