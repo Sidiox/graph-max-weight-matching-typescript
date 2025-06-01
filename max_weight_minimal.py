@@ -1,8 +1,8 @@
-from decimal import Decimal
-from itertools import repeat
-import json
-from numbers import Number
-from typing import Any
+"""
+Minimal version of https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.matching.max_weight_matching.html
+Removed all comments
+"""
+
 
 class NoNode:
     """Dummy value which is different from any node."""
@@ -528,7 +528,6 @@ def max_weight_matching(G: "Graph", maxcardinality=False):
                     elif label.get(b) == 2:
                         blossomdual[b] -= delta
 
-
             print(f"Duals updated with {delta=:.3e}, type={deltatype}")
             if deltatype == 1:
                 break
@@ -573,56 +572,3 @@ def matching_dict_to_set(mate: dict):
         if w is not None and v < w:
             matching.add((v, w))
     return matching
-
-
-if __name__ == "__main__":
-    # g = Graph()
-    # print("Graph:")
-    # edges = [
-    #     ("A", "B", 6),
-    #     ("A", "C", 2),
-    #     ("B", "C", 1),
-    #     ("B", "D", 7),
-    #     ("C", "E", 9),
-    #     ("D", "E", 3),
-    # ]
-
-    # g.add_weighted_edges_from(edges)
-    # res = max_weight_matching(g)
-    # print("Pure Python:")
-    # print(res)
-    # assert res == frozenset({('C', 'E'), ('B', 'D')})
-
-
-    # test_set = []
-    # with open("results.json") as f:
-    #     test_set = json.load(f)
-
-    # for test in test_set[3:4]:
-    #     g = Graph()
-    #     edges = test["edges"]
-    #     g.add_weighted_edges_from(edges)
-    #     res = max_weight_matching(g)
-    #     print("Pure Python:")
-    #     print(res)
-    #     ref = test["result"]
-    #     res = sorted([sorted(x) for x in res])
-    #     ref = sorted([sorted(x) for x in ref])
-
-    #     assert res == ref, f"{res} {ref} "
-
-    inputgraph_path = "test_graph.json"
-
-    inputedges = []
-    # inputedges = {}
-    with open(inputgraph_path, 'r') as file:
-        data = json.load(file)
-        for edge in data['edges']:
-            # print(edge)
-            # inputedges[(edge[0], edge[1])] = edge[2]
-            inputedges.append(edge)
-
-    g = Graph()
-    g.add_weighted_edges_from(inputedges)
-    res = max_weight_matching(g)
-
