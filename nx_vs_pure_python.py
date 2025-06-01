@@ -1,3 +1,4 @@
+import json
 from networkx import Graph as XGraph
 from networkx.algorithms.matching import max_weight_matching as nx_max_weight_matching
 import random
@@ -50,6 +51,9 @@ def compare_matchings(
         g1 = Graph()
         g1.add_weighted_edges_from(weighted_edges)
         result1 = max_weight_matching(g1)
+        result1_weight = 0
+        for u, v in result1:
+            result1_weight += g1[u][v]["weight"]
         normalized_result1 = {frozenset(edge) for edge in result1}
 
         # Construct Graph using NetworkX-compatible implementation
@@ -69,7 +73,9 @@ def compare_matchings(
             print("Pure Python:", result1)
             print("NetworkX:", result2)
 
-        results.append({"edges": weighted_edges, "result": list(result1)})
+        results.append(
+            {"edges": weighted_edges, "result": list(result1), "cost": result1_weight}
+        )
 
     print("All tests passed!")
     return results
@@ -84,6 +90,8 @@ if __name__ == "__main__":
         num_edges_range=(4, 200),
         num_nodes_range=(10, 200),
     )
+    with open("graph_int_medium.json", "w") as f:
+        json.dump(results, f, indent=4)
 
     # float comparison
     results = compare_matchings(
@@ -92,3 +100,14 @@ if __name__ == "__main__":
         int_edge=False,
         float_weight_mean=0.8,
     )
+    with open("graph_float_medium.json", "w") as f:
+        json.dump(results, f, indent=4)
+
+    results = compare_matchings(
+        num_edges_range=(4, 1000),
+        num_nodes_range=(10, 1000),
+        int_edge=False,
+        float_weight_mean=0.8,
+    )
+    with open("graph_float_large.json", "w") as f:
+        json.dump(results, f, indent=4)
