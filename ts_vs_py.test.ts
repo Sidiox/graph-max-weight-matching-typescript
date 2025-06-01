@@ -6,7 +6,7 @@ import { maxWeightMatching } from './gemini-2.5-pro-max-weight.ts';
 import { expect, test } from "bun:test";
 
 // function to compare the result set against the reference set
-function compareResults(res, expected: Set<[string,string]>): boolean {
+function compareResults(res, expected: Set<[string, string]>): boolean {
     let match = true;
     if (res.size !== expected.size) {
         match = false;
@@ -22,7 +22,7 @@ function compareResults(res, expected: Set<[string,string]>): boolean {
             }
         }
     }
-    return match ;
+    return match;
 }
 
 async function runTests(filePath: string) {
@@ -32,12 +32,13 @@ async function runTests(filePath: string) {
     var results = [];
     var counter = 0;
     for (const item of contents) {
-        const expected = new Set<[string,string]>();
+        const expected = new Set<[string, string]>();
 
         const refedges: [string, string, number][] = item.result;
         for (const edge of refedges) {
             expected.add([edge[0], edge[1]]);
         }
+        const refCost = Number(item.cost);
 
         const g = new Graph();
         const edges: [string, string, number][] = item.edges;
@@ -47,13 +48,30 @@ async function runTests(filePath: string) {
         var message = "";
         try {
             const res = maxWeightMatching(g);
+
+            // now we also want to know the weight of the answer
+            var resultCost = 0;
+            for (const resEdge of res) {
+                console.log(resEdge);
+                for (const edge of edges) {
+                    if ((edge[0] === resEdge[0] && edge[1] === resEdge[1]) || (edge[1] === resEdge[0] && edge[0] === resEdge[1])) {
+                        resultCost += Number(edge[2]);
+                    }
+                }
+            }
             // console.log("TypeScript Result:");
             // console.log(res);
             match = compareResults(res, expected);
-            if (!match) {
+            // expect(match).toBe(true);
+            if (!match && resultCost != refCost) {
+                // bad
                 const resComparable = Array.from(res).map(p => `${p[0]},${p[1]}`.split(',').sort().join(','));
                 const expComparable = Array.from(expected).map(p => `${p[0]},${p[1]}`.split(',').sort().join(','));
                 message = `${resComparable} vs ${expComparable}`;
+            } else if (!match && resultCost == refCost) {
+                // not that bad
+                message = "Cost matched";
+                match = true;
             }
         } catch (e) {
             console.warn(e);
