@@ -1,3 +1,68 @@
+/**
+NetworkX based implementation of Maximum Weight Graph matching
+Based on https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.matching.max_weight_matching.html
+and Zvi Galil, Efficient algorithms for finding maximum matching in graphs, ACM Computing Surveys, 1986. https://dl.acm.org/doi/10.1145/6462.6502
+
+Original NetworkX license https://networkx.org/documentation/stable/index.html#license
+Copyright (c) 2004-2025, NetworkX Developers
+Aric Hagberg <hagberg@lanl.gov>
+Dan Schult <dschult@colgate.edu>
+Pieter Swart <swart@lanl.gov>
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+  * Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above
+    copyright notice, this list of conditions and the following
+    disclaimer in the documentation and/or other materials provided
+    with the distribution.
+
+  * Neither the name of the NetworkX Developers nor the names of its
+    contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+====================================================================
+Added license for translation
+MIT License
+
+Copyright (c) 2025 Cees Portegies
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
 
 // Define NoNodeValue as a unique symbol
 const NoNodeValue: unique symbol = Symbol("NoNode");
@@ -139,12 +204,12 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
         const dualvar_v = dualvar[v];
         const dualvar_w = dualvar[w];
         const weight = 2 * G.adj[v][w];
-        // console.log(`slack(${v},${w}): dv[${v}]=${dualvar_v}, dv[${w}]=${dualvar_w}, G[${v}][${w}]=${G.adj[v][w]}, result=${dualvar_v + dualvar_w - weight}`);
+        // //console.log(`slack(${v},${w}): dv[${v}]=${dualvar_v}, dv[${w}]=${dualvar_w}, G[${v}][${w}]=${G.adj[v][w]}, result=${dualvar_v + dualvar_w - weight}`);
         return dualvar_v + dualvar_w - weight;
     }
 
     function assignLabel(w_node: string, type: number, v_parent: PathEndpointType | null): void {
-        console.log(`assignLabel(${w_node}, ${type})`);	
+        //console.log(`assignLabel(${w_node}, ${type})`);	
         const b_component = inblossom.get(w_node)!; // string or Blossom
         if (label.has(w_node) || label.has(b_component)) {
             throw new Error(`Assertion failed: label already set for ${w_node} or ${b_component}`);
@@ -165,7 +230,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
 
         if (type === 1) { // Outer node/component
             if (b_component instanceof Blossom) {
-                console.log(`Adding leaves to queue (${queue.length}) ${b_component.leaves().length}`)
+                //console.log(`Adding leaves to queue (${queue.length}) ${b_component.leaves().length}`)
                 queue.push(...b_component.leaves());
             } else { // b_component is string
                 queue.push(b_component);
@@ -241,7 +306,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
     }
 
     function addBlossom(base_node: string, v_orig: string, w_orig: string): void {
-        console.log("Adding blossom for node:", base_node, "with parent:", v_orig, "and child:", w_orig);
+        //console.log("Adding blossom for node:", base_node, "with parent:", v_orig, "and child:", w_orig);
         const bb_base_comp = inblossom.get(base_node)!;
         let v_curr_comp = inblossom.get(v_orig)!;
         let w_curr_comp = inblossom.get(w_orig)!;
@@ -294,7 +359,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
         for (const leaf_node of newBlossom.leaves()) { // string
             // Use inblossom.get(leaf_node) before update to check old label
             if (label.get(inblossom.get(leaf_node)!) === 2) {
-                console.log(`Adding to queue (${queue.length}) ${leaf_node}`)
+                //console.log(`Adding to queue (${queue.length}) ${leaf_node}`)
                 queue.push(leaf_node);
             }
             inblossom.set(leaf_node, newBlossom); // Update inblossom map for leaves
@@ -351,7 +416,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
     function expandBlossom(b_to_expand: Blossom, endstage: boolean): void {
         function* _recurse(currentBlossom: Blossom, isEndstage: boolean): IterableIterator<Blossom> {
 
-            console.log(`Expanding Blossom: ${currentBlossom.childs.length}`)
+            //console.log(`Expanding Blossom: ${currentBlossom.childs.length}`)
 
             for (const s_child of currentBlossom.childs) {
                 blossomparent.set(s_child, null);
@@ -396,7 +461,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
 
                     label.delete(path_w_node); // path_w_node is previous child node.
                     label.delete(q_node);       // q_node is current child node (matched to p_node).
-                    console.log("Assigning label in expandBlossom")
+                    //console.log("Assigning label in expandBlossom")
                     assignLabel(path_w_node, 2, path_v_node);
 
                     allowedge.set(`${p_node},${q_node}`, true);
@@ -481,7 +546,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 recurse_stack.pop();
             }
         }
-        console.log(`Expanded Blossom: ${b_to_expand.childs.length}`)
+        //console.log(`Expanded Blossom: ${b_to_expand.childs.length}`)
     }
 
     function augmentBlossom(b_to_augment: Blossom, v_node_exposed: string): void {
@@ -576,16 +641,16 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
     }
 
     function augmentMatching(v_start_node: string, w_start_node: string): void {
-        console.log(`Augment matching ${v_start_node} ${w_start_node}`)
+        //console.log(`Augment matching ${v_start_node} ${w_start_node}`)
         for (const [s_arg, j_arg] of [[v_start_node, w_start_node], [w_start_node, v_start_node]]) {
-            // console.log(`${inblossom.keys()}`)
+            // //console.log(`${inblossom.keys()}`)
             let s_node = s_arg; // string
             let j_node = j_arg; // string
-            console.log(`s='${s_node}' j='${j_node}'`);
+            //console.log(`s='${s_node}' j='${j_node}'`);
 
             while (true) {
                 const bs_comp = inblossom.get(s_node)!;
-                console.log(`s='${s_node}' bs='${bs_comp}'`)
+                //console.log(`s='${s_node}' bs='${bs_comp}'`)
                 if (label.get(bs_comp)! !== 1) throw new Error(`Assertion failed: label of ${bs_comp} is not 1: ${label.get(bs_comp)}`);
 
                 const lblEdge_bs = labeledge.get(bs_comp);
@@ -637,7 +702,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
 
     // Main algorithm loop
     while (true) {
-        console.log("Outer loop iteration");
+        //console.log("Outer loop iteration");
         label.clear();
         labeledge.clear();
         bestedge.clear();
@@ -655,10 +720,10 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
         let augmented = false;
 
         mainloop_bfs: while (true) {
-            console.log(`Inner loop 1 (BFS), queue length: ${queue.length}`);
+            //console.log(`Inner loop 1 (BFS), queue length: ${queue.length}`);
             while (queue.length > 0 && !augmented) {
                 const v_bfs = queue.pop()!; // LIFO, as per Python's queue.pop()
-                console.log(`Processing node from stack: ${v_bfs}`);
+                //console.log(`Processing node from stack: ${v_bfs}`);
 
                 if (label.get(inblossom.get(v_bfs)!) !== 1) throw new Error("Assertion: Node from stack not labeled 1");
 
@@ -675,7 +740,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
 
                     if (!allowedge.has(edgeKey_vw)) {
                         const kslack_val = slack(v_bfs, w_neighbor);
-                        // console.log(`Slack for (${v_bfs}, ${w_neighbor}): ${kslack_val.toFixed(2)}`);
+                        // //console.log(`Slack for (${v_bfs}, ${w_neighbor}): ${kslack_val.toFixed(2)}`);
                         if (kslack_val <= 0) {
                             allowedge.set(edgeKey_vw, true);
                             allowedge.set(edgeKey_wv, true);
@@ -683,7 +748,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     }
 
                     if (allowedge.has(edgeKey_vw)) {
-                        console.log(`Edge (${v_bfs},${w_neighbor}) is allowed.`);
+                        //console.log(`Edge (${v_bfs},${w_neighbor}) is allowed.`);
                         if (!label.has(bw_neighbor)) { // Case 1: w_neighbor's component is unlabeled
                             assignLabel(w_neighbor, 2, v_bfs);
                         } else if (label.get(bw_neighbor) === 1) { // Case 2: w_neighbor's component is 'outer'
@@ -719,7 +784,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
             } // End while (queue.length > 0 && !augmented)
 
             if (augmented) {
-                console.log("Augmented, breaking from inner dual adjustment loop.");
+                //console.log("Augmented, breaking from inner dual adjustment loop.");
                 break mainloop_bfs;
             }
 
@@ -757,7 +822,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     const d_val = allinteger ? (kslack_val / 2) : (kslack_val / 2.0);
                     if (allinteger && kslack_val % 2 !== 0) throw new Error("Assertion: kslack not even for integer weights (Type 3 delta)");
                     if (deltatype === -1 || d_val < delta) {
-                        console.log(`Deltatype 3: d=${d_val.toExponential(3)} kslack=${kslack_val.toExponential(3)}`);
+                        //console.log(`Deltatype 3: d=${d_val.toExponential(3)} kslack=${kslack_val.toExponential(3)}`);
                         delta = d_val;
                         deltatype = 3;
                         deltaedge = bestedge.get(b_comp)!;
@@ -796,7 +861,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                     else if (b_label === 2) blossomdual.set(b_dual_key, blossomdual.get(b_dual_key)! - delta);
                 }
             }
-            console.log(`Duals updated with delta=${delta.toExponential(3)}, type=${deltatype}`);
+            //console.log(`Duals updated with delta=${delta.toExponential(3)}, type=${deltatype}`);
 
             if (deltatype === 1) {
                 break mainloop_bfs; // No change or special termination
@@ -806,10 +871,10 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 allowedge.set(`${v_e},${w_e}`, true);
                 allowedge.set(`${w_e},${v_e}`, true);
                 const nodeToQueue = label.get(inblossom.get(v_e)!) === 1 ? v_e : (label.get(inblossom.get(w_e)!) === 1 ? w_e : null);
-                console.log(`deltatype=2 adding to queue (${queue.length}) ${nodeToQueue}`)
+                //console.log(`deltatype=2 adding to queue (${queue.length}) ${nodeToQueue}`)
                 queue.push(v_e);
                 // if (nodeToQueue) {
-                //     console.log(`Adding to queue (${queue.length}) ${nodeToQueue}`)
+                //     //console.log(`Adding to queue (${queue.length}) ${nodeToQueue}`)
                 //     queue.push(nodeToQueue);
 
                 // } else {
@@ -833,7 +898,7 @@ function maxWeightMatching(G: Graph, maxcardinality: boolean = false): Set<[stri
                 allowedge.set(`${v_e},${w_e}`, true); allowedge.set(`${w_e},${v_e}`, true);
                 if (label.get(inblossom.get(v_e)!) !== 1) throw new Error("Assertion: Type 3 deltaedge[0] not outer");
 
-                console.log(`deltatype=3 adding to queue (${queue.length}) ${v_e}`)
+                //console.log(`deltatype=3 adding to queue (${queue.length}) ${v_e}`)
                 queue.push(v_e);
             } else if (deltatype === 4) {
                 if (!(deltablossom_obj instanceof Blossom)) throw new Error("Deltablossom_obj not a Blossom instance for Type 4 delta");
@@ -885,7 +950,7 @@ function matchingDictToSet(mate: Record<string, string>): Set<[string, string]> 
 
 if (require.main === module) { // Basic test runner equivalent to if __name__ == "__main__":
     // const g = new Graph();
-    // console.log("Graph:");
+    // //console.log("Graph:");
     // const edges: [string, string, number][] = [
     //     ["A", "B", 6],
     //     ["A", "C", 2],
@@ -897,11 +962,11 @@ if (require.main === module) { // Basic test runner equivalent to if __name__ ==
 
     // g.addWeightedEdgesFrom(edges);
     // const res = maxWeightMatching(g);
-    // console.log("TypeScript Result:");
-    // console.log(res); // Set { [ 'C', 'E' ], [ 'B', 'D' ] } or Set { [ 'B', 'D' ], [ 'C', 'E' ] }
+    // //console.log("TypeScript Result:");
+    // //console.log(res); // Set { [ 'C', 'E' ], [ 'B', 'D' ] } or Set { [ 'B', 'D' ], [ 'C', 'E' ] }
 
     const g = new Graph();
-    console.log("Graph:");
+    //console.log("Graph:");
     const edges: [string, string, number][] = [
         ["A", "B", 6],
         ["A", "C", 2],
@@ -913,8 +978,8 @@ if (require.main === module) { // Basic test runner equivalent to if __name__ ==
 
     g.addWeightedEdgesFrom(edges);
     const res = maxWeightMatching(g);
-    console.log("TypeScript Result:");
-    console.log(res); // Set { [ 'C', 'E' ], [ 'B', 'D' ] } or Set { [ 'B', 'D' ], [ 'C', 'E' ] }
+    //console.log("TypeScript Result:");
+    //console.log(res); // Set { [ 'C', 'E' ], [ 'B', 'D' ] } or Set { [ 'B', 'D' ], [ 'C', 'E' ] }
 
 
     // Basic assertion for the example
@@ -937,13 +1002,13 @@ if (require.main === module) { // Basic test runner equivalent to if __name__ ==
             }
         }
     }
-    console.log("Assertion matches expected:", match);
+    //console.log("Assertion matches expected:", match);
     if (!match) {
         console.error("Assertion failed!");
-        console.log("Expected:", expComparable);
-        console.log("Got:", resComparable);
+        //console.log("Expected:", expComparable);
+        //console.log("Got:", resComparable);
     } else {
-        console.log("Test passed!");
+        //console.log("Test passed!");
     }
 }
 
